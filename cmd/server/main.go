@@ -13,7 +13,6 @@ import (
 func main() {
 	const rabbitConnString = "amqp://guest:guest@localhost:5672/"
 
-	// pause, resume, quit, help (these are the commands)
 	conn, err := amqp.Dial(rabbitConnString)
 	if err != nil {
 		log.Fatalf("could not connect to RabbitMQ: %v", err)
@@ -25,6 +24,18 @@ func main() {
 	if err != nil {
 		log.Fatalf("could not create channel: %v", err)
 	}
+
+	_, queue, err := pubsub.DeclareAndBind(
+		conn,
+		routing.ExchangePerilTopic,
+		routing.GameLogSlug,
+		routing.GameLogSlug+".*",
+		pubsub.SimpleQueueDurable,
+	)
+	if err != nil {
+		log.Fatalf("could not subscribe to pause: %v", err)
+	}
+	fmt.Printf("Queue %v declared and bound!\n", queue.Name)
 
 	gamelogic.PrintServerHelp()
 
